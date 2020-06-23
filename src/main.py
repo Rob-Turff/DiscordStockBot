@@ -80,7 +80,7 @@ async def handle_jl_command(message, commands, current_time, cutoff_time, sleep_
                 if not re.search("class=\"disabled", str(size)):
                     await message.author.send("Product available in size " + commands[3] + " at: " + commands[2])
                     return
-        await asyncio.sleep(sleep_length)
+        await asyncio.sleep(int(sleep_length))
     await message.author.send("Product search expired for size " + commands[3] + " at: " + commands[2])
 
 
@@ -92,7 +92,7 @@ async def handle_ff_command(message, commands, current_time, cutoff_time, sleep_
             if size.text.strip() == commands[3]:
                 await message.author.send("Product available in size " + commands[3] + " at: " + commands[2])
                 return
-        await asyncio.sleep(sleep_length)
+        await asyncio.sleep(int(sleep_length))
     await message.author.send("Product search expired for size " + commands[3] + " at: " + commands[2])
 
 
