@@ -5,10 +5,12 @@ import logging
 import urllib.request
 from bs4 import BeautifulSoup
 import re
+import config
 
 logging.basicConfig(level=logging.INFO)
 
 client = discord.Client()
+
 
 
 @client.event
@@ -94,4 +96,4 @@ async def handle_ff_command(message, commands, current_time, cutoff_time, sleep_
     await message.author.send("Product search expired for size " + commands[3] + " at: " + commands[2])
 
 
-client.run('NzE1OTUzNjA2NTY1ODIyNTE1.XvExJQ.F_R1MfqhMRXIpj_uU_W4Gd667gw')
+client.run(config.token)
