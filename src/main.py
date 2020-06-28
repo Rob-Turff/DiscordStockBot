@@ -6,6 +6,7 @@ import urllib.request
 from bs4 import BeautifulSoup
 import re
 import config
+import requests
 
 logging.basicConfig(level=logging.INFO)
 
@@ -28,9 +29,9 @@ async def on_message(message):
             await message.channel.send(
                 '!sb [shop shorthand] [item url] [size] [search interval (mins)] (optional) \nUse !sb list for '
                 'available shops!')
-        if commands[1] == "list":
+        elif commands[1] == "list":
             await print_available_shops(message)
-        if len(commands) >= 4:
+        elif len(commands) >= 4:
             await handle_shop_commands(message, commands)
 
 
@@ -48,7 +49,7 @@ async def handle_shop_commands(message, commands):
 
     if commands[1] == 'jl':
         await handle_jl_command(message, commands, current_time, cutoff_time, sleep_length)
-    if commands[1] == 'ff':
+    elif commands[1] == 'ff':
         await handle_ff_command(message, commands, current_time, cutoff_time, sleep_length)
     else:
         await message.channel.send("Store not recognised")
@@ -69,7 +70,6 @@ async def get_website_html(url):
     parsed_html = BeautifulSoup(page_decoded)
     page.close()
     return parsed_html
-
 
 async def handle_jl_command(message, commands, current_time, cutoff_time, sleep_length):
     while current_time < cutoff_time:
@@ -94,6 +94,5 @@ async def handle_ff_command(message, commands, current_time, cutoff_time, sleep_
                 return
         await asyncio.sleep(int(sleep_length))
     await message.author.send("Product search expired for size " + commands[3] + " at: " + commands[2])
-
 
 client.run(config.token)
