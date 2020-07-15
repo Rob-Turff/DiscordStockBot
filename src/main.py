@@ -84,9 +84,8 @@ async def handle_jl_command(message, commands, current_time, cutoff_time, sleep_
                         await message.author.send("Product available in size " + commands[3] + " at: " + commands[2])
                         return
         else:
-            is_available1 = parsed_html.body.find("button", {"id": "button--add-to-basket-choose-size"})
-            is_available2 = parsed_html.body.find("button", {"id": "button--add-to-basket"})
-            if is_available1 is not None or is_available2 is not None:
+            is_available = re.search("(id=\"button--add-to-basket\")|(\"button--add-to-basket-choose-size\")", str(parsed_html.contents))
+            if is_available:
                 logging.info("Sent product found message for: " + commands[2] + " to: " + str(message.author))
                 await message.author.send("Product available at: " + commands[2])
                 return
