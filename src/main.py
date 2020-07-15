@@ -1,21 +1,19 @@
 import asyncio
 import datetime
+import config
 import discord
 import logging
 import urllib.request
 from bs4 import BeautifulSoup
 import re
-import config
-import requests
 
-logging.basicConfig(level=logging.INFO)
-
+logging.basicConfig(filename='app.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 client = discord.Client()
-
 
 
 @client.event
 async def on_ready():
+    logging.info("Logged in as user: {0.user}".format(client))
     print('We have logged in as {0.user}'.format(client))
 
 
@@ -24,10 +22,11 @@ async def on_message(message):
     if message.author == client.user:
         return
     if message.content.startswith('!sb'):
+        logging.info("received command: " + message.content)
         commands = str(message.content).split(' ')
         if len(commands) == 1 or commands[1] == 'help':
             await message.channel.send(
-                '!sb [shop shorthand] [item url] [size] [search interval (mins)] (optional) \nUse !sb list for '
+                '!sb [shop shorthand] [item url] [size (or n/a)] [search interval (mins)] (optional) \nUse !sb list for '
                 'available shops!')
         elif commands[1] == "list":
             await print_available_shops(message)
@@ -55,6 +54,7 @@ async def handle_shop_commands(message, commands):
         await message.channel.send("Store not recognised")
         await print_available_shops(message)
 
+
 async def print_available_shops(message):
     available_shops = {"John Lewis": "jl", "FatFace": "ff"}
     string = ""
@@ -71,16 +71,27 @@ async def get_website_html(url):
     page.close()
     return parsed_html
 
+
 async def handle_jl_command(message, commands, current_time, cutoff_time, sleep_length):
     while current_time < cutoff_time:
         parsed_html = await get_website_html(commands[2])
-        sizes = parsed_html.body.findAll("li", {"class": "item--EzEuW"})
-        for size in sizes:
-            if size.text == commands[3]:
-                if not re.search("class=\"disabled", str(size)):
-                    await message.author.send("Product available in size " + commands[3] + " at: " + commands[2])
-                    return
+        if commands[3] != "n/a":
+            sizes = parsed_html.body.findAll("li", {"class": "item--EzEuW"})
+            for size in sizes:
+                if size.text == commands[3]:
+                    if not re.search("class=\"disabled", str(size)):
+                        logging.info("Sent product found message for: " + commands[2] + " to: " + str(message.author))
+                        await message.author.send("Product available in size " + commands[3] + " at: " + commands[2])
+                        return
+        else:
+            is_available1 = parsed_html.body.find("button", {"id": "button--add-to-basket-choose-size"})
+            is_available2 = parsed_html.body.find("button", {"id": "button--add-to-basket"})
+            if is_available1 is not None or is_available2 is not None:
+                logging.info("Sent product found message for: " + commands[2] + " to: " + str(message.author))
+                await message.author.send("Product available at: " + commands[2])
+                return
         await asyncio.sleep(int(sleep_length))
+    logging.info("Sent search expired message to: " + str(message.author))
     await message.author.send("Product search expired for size " + commands[3] + " at: " + commands[2])
 
 
@@ -90,9 +101,12 @@ async def handle_ff_command(message, commands, current_time, cutoff_time, sleep_
         sizes = parsed_html.body.findAll("a", {"class": "b-variation__link swatchanchor selectable size"})
         for size in sizes:
             if size.text.strip() == commands[3]:
+                logging.info("Sent product found message for: " + commands[2] + " to: " + str(message.author))
                 await message.author.send("Product available in size " + commands[3] + " at: " + commands[2])
                 return
         await asyncio.sleep(int(sleep_length))
+    logging.info("Sent search expired message to: " + str(message.author))
     await message.author.send("Product search expired for size " + commands[3] + " at: " + commands[2])
+
 
 client.run(config.token)
